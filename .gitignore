@@ -1,0 +1,4 @@
+# Ignore c#
+bin/
+obj/
+wwwroot/
