@@ -1,0 +1,129 @@
+version: "3"
+services:
+  ## Sample Application
+  sampleapp:
+    build:
+      context: ./sample-app
+      dockerfile: Dockerfile
+    container_name: sample-app
+    networks:
+      - elk-sample
+    ports:
+      - "5000:80"
+      - "5001:443"
+    volumes:
+      - ./logs:/app/logs
+
+  ## MariaDB to output log
+  mariadb:
+    image: "mariadb:10.4.13"
+    # Include my.ini configurations via commands.
+    command: --sql_mode="STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION,ANSI_QUOTES"
+    networks:
+      - elk-sample
+    ports:
+      - "3306:3306"
+    # volumes:
+    #   - ./data/mariadb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "pass#word"
+      MYSQL_DATABASE: "sampleapp"
+      MYSQL_USER: "sample"
+      MYSQL_PASSWORD: "pass#word"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "false"
+
+  # ## OpenSearch Stack
+  # # https://opensearch.org/docs/latest/opensearch/install/docker/
+  # ## FOR DEVELOPMENT ENVIRONMENT
+  # opensearch-node1:
+  #   image: opensearchproject/opensearch:1.2.4
+  #   container_name: opensearch-node1
+  #   environment:
+  #     - cluster.name=opensearch-cluster
+  #     - node.name=opensearch-node1
+  #     - discovery.type=single-node
+  #   volumes:
+  #     - opensearch-data1:/usr/share/opensearch/data
+  #   ports:
+  #     - 9200:9200
+  #     - 9600:9600 # required for Performance Analyzer
+  #   networks:
+  #     - elk-sample
+  # ## FOR PRODUCTION ENVIRONMENT
+  # # opensearch-node1:
+  # #   image: opensearchproject/opensearch:1.2.4
+  # #   container_name: opensearch-node1
+  # #   environment:
+  # #     - cluster.name=opensearch-cluster
+  # #     - node.name=opensearch-node1
+  # #     - discovery.seed_hosts=opensearch-node1,opensearch-node2
+  # #     - cluster.initial_master_nodes=opensearch-node1,opensearch-node2
+  # #     - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+  # #     - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+  # #   ulimits:
+  # #     memlock:
+  # #       soft: -1
+  # #       hard: -1
+  # #     nofile:
+  # #       soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+  # #       hard: 65536
+  # #   volumes:
+  # #     - opensearch-data1:/usr/share/opensearch/data
+  # #   ports:
+  # #     - 9200:9200
+  # #     - 9600:9600 # required for Performance Analyzer
+  # #   networks:
+  # #     - elk-sample
+  # # opensearch-node2:
+  # #   image: opensearchproject/opensearch:1.2.4
+  # #   container_name: opensearch-node2
+  # #   environment:
+  # #     - cluster.name=opensearch-cluster
+  # #     - node.name=opensearch-node2
+  # #     - discovery.seed_hosts=opensearch-node1,opensearch-node2
+  # #     - cluster.initial_master_nodes=opensearch-node1,opensearch-node2
+  # #     - bootstrap.memory_lock=true
+  # #     - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+  # #   ulimits:
+  # #     memlock:
+  # #       soft: -1
+  # #       hard: -1
+  # #     nofile:
+  # #       soft: 65536
+  # #       hard: 65536
+  # #   volumes:
+  # #     - opensearch-data2:/usr/share/opensearch/data
+  # #   networks:
+  # #     - elk-sample
+  # opensearch-dashboards:
+  #   image: opensearchproject/opensearch-dashboards:1.2.0
+  #   container_name: opensearch-dashboards
+  #   ports:
+  #     - 5601:5601
+  #   expose:
+  #     - "5601"
+  #   environment:
+  #     # OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]' # must be a string with no spaces when specified as an environment variable
+  #     OPENSEARCH_HOSTS: '["https://opensearch-node1:9200"]' # must be a string with no spaces when specified as an environment variable
+  #   networks:
+  #     - elk-sample
+
+  # ## Open-source grafana version
+  # grafana:
+  #   image: grafana/grafana-oss
+  #   container_name: grafana
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - elk-sample
+
+networks:
+  elk-sample:
+
+volumes:
+  mariadb:
+    driver: local
+  # opensearch-data1:
+  #   driver: local
+  # opensearch-data2:
+  #   driver: local
