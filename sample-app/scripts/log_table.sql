@@ -1,3 +1,5 @@
+SET sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION,ANSI_QUOTES';
+
 CREATE TABLE "w3c_log" (
   "timestamp" datetime DEFAULT NULL,
   "host" varchar(255) DEFAULT NULL,
@@ -21,3 +23,9 @@ CREATE TABLE "w3c_log" (
   "user_ipv4" varchar(30) DEFAULT NULL,
   "user_ipv6" varchar(30) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
+
+/*
+#Fields: date time s-computername s-ip cs-method cs-uri-stem cs-uri-query s-port c-ip cs(Referer) cs-host sc-status time-taken
+2022-01-25 14:17:49 FOCA-AVELL 127.0.0.1 GET / - 80 127.0.0.1 - foca.localhost.com.br 302 39482
+grok_patterns = ["%{TIMESTAMP_ISO8601:log_date} %{NOTSPACE:server_name} %{IPV4:server_ipv4} %{WORD:http_method} %{NOTSPACE:uri_path} %{NOTSPACE:uri_query} %{NUMBER:server_port} %{IPV4:user_ipv4} %{NOTSPACE:referer} %{NOTSPACE:host_uri} %{NUMBER:http_status} %{NUMBER:time_taken}"]
+*/
