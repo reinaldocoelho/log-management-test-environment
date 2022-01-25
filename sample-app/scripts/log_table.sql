@@ -1,3 +1,19 @@
+-- ## #######################################################################
+-- ## Create Access to server
+-- ## #######################################################################
+SELECT User FROM mysql.user;
+CREATE USER IF NOT EXISTS 'user'@'%';
+SET PASSWORD FOR 'user'@'%' = PASSWORD('userMon@1');
+  
+GRANT INSERT ON *.* 
+TO 'user'@'%' 
+WITH GRANT OPTION;
+    
+FLUSH PRIVILEGES;
+
+-- ## #######################################################################
+-- ## Set ANSI_QUOTES to create table
+-- ## #######################################################################
 SET sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION,ANSI_QUOTES';
 
 CREATE TABLE "w3c_log" (
@@ -24,8 +40,16 @@ CREATE TABLE "w3c_log" (
   "user_ipv6" varchar(30) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 
-/*
-#Fields: date time s-computername s-ip cs-method cs-uri-stem cs-uri-query s-port c-ip cs(Referer) cs-host sc-status time-taken
-2022-01-25 14:17:49 FOCA-AVELL 127.0.0.1 GET / - 80 127.0.0.1 - foca.localhost.com.br 302 39482
-grok_patterns = ["%{TIMESTAMP_ISO8601:log_date} %{NOTSPACE:server_name} %{IPV4:server_ipv4} %{WORD:http_method} %{NOTSPACE:uri_path} %{NOTSPACE:uri_query} %{NUMBER:server_port} %{IPV4:user_ipv4} %{NOTSPACE:referer} %{NOTSPACE:host_uri} %{NUMBER:http_status} %{NUMBER:time_taken}"]
-*/
+
+-- #######################################################################
+-- Create event to clean old data
+-- Usando Event: https://mariadb.com/kb/en/create-event/
+-- #######################################################################
+CREATE OR REPLACE EVENT delete_w3c_data_event
+ON SCHEDULE EVERY 23 DAY_HOUR
+ON COMPLETION PRESERVE
+COMMENT 'Clean up Logs at 23:00 daily!'
+DO BEGIN
+      DELETE FROM grafana.w3c_log WHERE timestamp < DATE_SUB(NOW(), INTERVAL 7 DAY);
+END;
+-- #######################################################################
